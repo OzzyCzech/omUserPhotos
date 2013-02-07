@@ -1,0 +1,96 @@
+<h3>Fotografie uživatele</h3>
+<style type="text/css">
+    #omUserPhotoWarningMessage {
+		    background: #c00;
+        color: #fff;
+		    padding: 5px 8px;
+        display: none;
+		    -moz-border-radius: 3px;
+		    border-radius: 3px;
+    }
+
+    #omUserPhotoPreview img {
+        max-width: 50%;
+        padding: 5px 0;
+    }
+</style>
+
+
+<table class="form-table">
+    <tbody>
+    <tr>
+        <th><label for="omUserPhoto">Fotografie uživatele</label></th>
+        <td>
+            <input type="hidden" name="omUserPhoto" id="omUserPhoto"
+                   value="<?php echo omUserPhotos::getUserPhotoMetaValue($user->ID)?>"/>
+
+            <button type="button" class="button" id="omImageSelectButton">Vybrat fotografii</button>
+            <button type="button" class="button" id="omDeleteUserPhoto"
+							<?php echo (omUserPhotos::hasUserImage($user->ID)) ? null : 'style="display:none"';?>>
+                Smazat fotografii
+            </button>
+            <span id="omUserPhotoWarningMessage">Nezapomeňte změny uložit!!!</span>
+
+            <div id="omUserPhotoPreview">
+							<?php
+							if (omUserPhotos::hasUserImage($user->ID)) {
+								echo omUserPhotos::getUserPhotoImg($user->ID, 'medium');
+							} else {
+								echo '<img src="' . includes_url() . 'images/blank.gif" alt="" />';
+							}
+							?>
+            </div>
+
+
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<script type="text/javascript">
+    // @see http://wordpress.stackexchange.com/questions/78547/display-media-uploader-in-own-plugin-on-wordpress-3-5
+    // @see http://mikejolley.com/2012/12/using-the-new-wordpress-3-5-media-uploader-in-plugins/
+    (function ($) {
+
+        var authorPhotoFileFrame;
+
+        // smazani uzivatelske fotky
+        $('#omDeleteUserPhoto').live('click', function (event) {
+            $("#omUserPhoto").val('');
+            $("#omUserPhotoPreview img").attr("src", "<?php echo includes_url() . 'images/blank.gif';?>");
+            $("#omUserPhotoWarningMessage").show();
+            $(this).hide()
+        });
+
+        // kliknuti na tlacitko vybrani uzivatele
+        $('#omImageSelectButton').live('click', function (event) {
+
+            event.preventDefault();
+
+            if (authorPhotoFileFrame) {
+                authorPhotoFileFrame.open();
+                return;
+            }
+
+            authorPhotoFileFrame = wp.media.frames.file_frame = wp.media({
+                title: 'Vyberte fotografii uživatele',
+                button: {
+                    text: 'Vybrat'
+                },
+                multiple: false
+            });
+
+            authorPhotoFileFrame.on('select', function () {
+                attachment = authorPhotoFileFrame.state().get('selection').first().toJSON();
+                $("#omUserPhoto").val(attachment.id);
+                $("#omUserPhotoPreview img").attr("src", attachment.url);
+                $("#omDeleteUserPhoto").show();
+                $("#omUserPhotoWarningMessage").show();
+            });
+
+            authorPhotoFileFrame.open();
+        });
+
+    })(jQuery);
+
+</script>
